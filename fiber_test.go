@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -62,4 +63,32 @@ func TestGetQuery(t *testing.T) {
 	bytes, err = io.ReadAll(response.Body)
 
 	assert.Equal(t, "Hello Guest", string(bytes))
+}
+
+func TestHttpRequest(t *testing.T) {
+	app.Get("/test-http", func(ctx fiber.Ctx) error {
+		firstName := ctx.Get("first_name")       // from header
+		middleName := ctx.Cookies("middle_name") // cookies
+
+		return ctx.SendString("Hello " + firstName + " " + middleName)
+	})
+
+	request := httptest.NewRequest("GET", "/test-http", nil)
+	request.Header.Set("first_name", "Arzaqul")
+	request.AddCookie(&http.Cookie{Name: "middle_name", Value: "Mughny Al Fawwaz"})
+	response, err := app.Test(request)
+
+	if err != nil {
+		panic(err)
+	}
+
+	assert.Nil(t, err)
+	assert.Equal(t, 200, response.StatusCode)
+	bytes, err := io.ReadAll(response.Body)
+
+	if err != nil {
+		panic(err)
+	}
+
+	assert.Equal(t, "Hello Arzaqul Mughny Al Fawwaz", string(bytes))
 }
