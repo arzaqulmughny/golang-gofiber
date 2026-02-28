@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/gofiber/fiber/v3"
@@ -91,4 +92,30 @@ func TestHttpRequest(t *testing.T) {
 	}
 
 	assert.Equal(t, "Hello Arzaqul Mughny Al Fawwaz", string(bytes))
+}
+
+func TestRouteParams(t *testing.T) {
+	app.Get("/users/:userId/orders/:orderId", func(ctx fiber.Ctx) error {
+		userId := ctx.Params("userId")
+		orderId := ctx.Params("orderId")
+
+		return ctx.SendString("User Id: " + userId + " Order Id: " + orderId)
+	})
+
+	userId := 1
+	orderId := 2
+
+	request := httptest.NewRequest("GET", "/users/"+strconv.Itoa(userId)+"/orders/"+strconv.Itoa(orderId), nil)
+	response, err := app.Test(request)
+
+	if err != nil {
+		panic(err)
+	}
+
+	assert.Nil(t, err)
+	assert.Equal(t, 200, response.StatusCode)
+
+	bytes, err := io.ReadAll(response.Body)
+
+	assert.Equal(t, "User Id: "+strconv.Itoa(userId)+" Order Id: "+strconv.Itoa(orderId), string(bytes))
 }
