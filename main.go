@@ -13,6 +13,10 @@ func main() {
 		WriteTimeout: time.Second * 5,
 	})
 
+	app.Get("/", func(c fiber.Ctx) error {
+		return c.SendString("Hello!")
+	})
+
 	err := app.Listen("localhost:8124")
 
 	if err != nil {
